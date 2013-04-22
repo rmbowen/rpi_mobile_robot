@@ -1,1 +1,7 @@
 This project is to use a Raspberry Pi to control a mobile robot from a web interface. 
+
+This project uses a Java Socket Bridge developed by:
+Stephan Ware
+sgware@gmail.com
+Latest: April 25, 2009
+It is freeware but any use Stephan appreciates the shout out!
