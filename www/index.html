@@ -1,0 +1,368 @@
+<!doctype html>
+ 
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mobile Robot Controller</title>
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.1/themes/base/jquery-ui.css" />
+  <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+  <script src="http://code.jquery.com/ui/1.10.1/jquery-ui.js"></script>
+  <script type="text/javascript" src="java_socket_bridge.js"></script>
+  <link rel="stylesheet" href="/resources/demos/style.css" />
+  <style>
+	#mainWindow{ width: 1280px; height: 610px; text-align:center; margin:auto;}
+	#allControls{ width: 1200px; height: 100%; text-align:center; margin:auto;}
+	.commandSpacer{width:20px; height:100%;float:left;}
+	#gameStatus{ width: 200px; height:530px; margin:auto;margin-top:20px; float:left;}
+	#robotStatus{ width: 200px; height:530px; margin:auto;margin-top:20px; float:left;}
+	#camera{ width: 660px; height:530px; margin:auto;margin-top:20px;float:left;}
+	#cameraFeed{ width: 640px; height: 480px; margin:auto;margin-top:10px}
+	#mainWindow #camera{padding:0;}
+	#gameStatus #roboStatus #BatteryIndicator{margin-left:10px}
+	#backSide{width: 660px; height:20px}
+	h3{text-align:center; margin:0;}
+	/* *{cursor:none;} */
+	#crosshair-h{
+		width:100px;
+		height:3px;
+		/*margin-left:-50px;*/
+		margin-left:270px;
+		margin-top:230px;
+	}
+	#crosshair-v{
+		height:100px;
+		width:3px;
+		/*margin-left:-50px;*/
+		margin-left:320px;
+		margin-top:180px;
+	}
+	.hair{    
+		position:fixed;
+		background-color:rgba(0,255,0,0.5);
+		box-shadow:0 0 5px rgb(100,100,100);
+		pointer-events:none;
+	}
+
+  </style>
+  <script>
+  /*
+  $(function() {
+    $( "#mainWindow" ).resizable();
+  });*/
+  
+  var batLife = 100;
+  var leftIR = 0;
+  var rightIR = 0;
+  var backIR = 0;
+
+  var prevKey = 0;
+
+  var snd = new Audio("sounds/mech_load.wav");
+  var sndLaser = new Audio("sounds/laser.wav");
+  
+  snd.play();
+  
+  
+  // Set the cross-hair
+  
+	var cH = $('#crosshair-h'),
+    cV = $('#crosshair-v');
+		
+    cH.css('top','764');
+	cH.css('left','349');
+		
+    //cV.css('left',e.pageX+50);
+	//cV.css('top',e.pageY-50-$(window).scrollTop());
+		
+$(document).ready(function(){ 
+	
+	jQuery.fn.timer = function() {
+		// Update The Battery
+		$.get("../include/processCmd.php",{cmd:"robotData",data:"all"},function(data,status){
+		    // double parse till i figure out why.. strips slashes 
+		    	allData = JSON.parse(JSON.parse(data));
+		    	batLife = allData.battery;
+			leftIR = allData.leftIR;
+			rightIR = allData.rightIR;
+			backIR = allData.backIR;
+		 });
+		
+		$('#batteryLife').html(batLife);
+		$('#backIR').html(backIR);
+		$('#leftIR').html(leftIR);
+		$('#rightIR').html(rightIR);
+
+		if( leftIR == 1){
+			$('#leftSide').css("background-color", "red");
+		}else{
+			$('#leftSide').css("background-color", "white");
+		}
+
+		if( rightIR == 1){
+			$('#rightSide').css("background-color", "red");
+		}else{
+			$('#rightSide').css("background-color", "white");
+		}
+
+		if( backIR == 1){
+			$('#backSide').css("background-color", "red");
+		}else{
+			$('#backSide').css("background-color", "white");
+		}
+	} // timer function end
+	
+	//window.setInterval(function() {
+	//	$("#example").timer();
+	//}, 250);
+	
+});
+	var host = 'route.student.rit.edu';
+       var port = 1234;
+	
+	function connect(){	
+		socket_connect(host, port);  
+		alert("connected");
+       } 
+                                     
+                
+
+		function on_socket_get(message){
+                        //alert("TCP Message: " + message);
+		}
+                
+  </script>
+</head>
+<body>
+
+<button onclick="connect()">Connect</button>
+<div id="fullWindow">
+ 
+<div id="mainWindow" class="ui-widget-content">
+	<h3 class="ui-widget-header">Mobile Robot Commander</h3>
+	
+	<div id="allControls">
+		
+		<div class="commandSpacer">
+		</div>
+		
+		<div id="gameStatus" class="ui-widget-content">
+			<h3 class="ui-widget-header">Game Status</h3>
+		</div>
+		
+		<div id="leftSide" class="commandSpacer">
+		</div>
+		
+		<div id="camera" class="ui-widget-content">
+			<h3 class="ui-widget-header">Robot View</h3>
+			<div id="cameraFeed" class="ui-widget-content" tabindex="0">
+				<div id="crosshair-h" class="hair"></div>
+				<div id="crosshair-v" class="hair"></div>
+				
+				<!-- <img id="cameraSrc" src="http://axis2.student.rit.edu/mjpg/video.mjpg?resolution=640x480&amp;req_fps=30&amp;.mjpg" alt="real-time video feed" /> -->
+				
+				<img id="cameraSrc" src="http://129.21.115.55:8081/?action=stream" alt="real-time video feed" />
+				
+			</div>
+			<div id="backSide">
+			</div>
+		</div>
+
+		<div id="rightSide" class="commandSpacer">
+		</div>
+		
+		<div id="robotStatus" class="ui-widget-content">
+			<h3 class="ui-widget-header">Robot Status</h3>
+			<h3 class="ui-widget-header">Battery</h3>
+			<div id="batteryLife">
+			</div>
+			<h3 class="ui-widget-header">Back IR</h3>
+			<div id="backIR">
+			</div>
+			<h3 class="ui-widget-header">Left IR</h3>
+			<div id="leftIR">
+			</div>
+			<h3 class="ui-widget-header">Right IR</h3>
+			<div id="rightIR">
+			</div>
+		</div>
+		
+		<div class="commandSpacer">
+		</div>
+	</div>
+</div>
+
+</div>
+
+<div>
+	<applet id="JavaSocketBridge" archive="JavaSocketBridge.jar" code="JavaSocketBridge.class" width="1" height="1"></applet>
+</div>
+
+<script>
+var keyW = 87;
+var keyA = 65;
+var keyS = 83;
+var keyD = 68;
+var keySpace = 32;
+var keyUp = 38;
+var keyDown = 40;
+var keyRight = 39;
+var keyLeft = 37;
+var keyEnd  = 35;
+var keyF = 70;
+var keyCtrl = 17;
+var keyI = 73;
+var keyJ = 74;
+var keyK = 75;
+var keyL = 76;
+
+var cmdForward = keyI;
+var cmdBackward = keyK;
+var cmdLeft = keyJ;
+var cmdRight = keyL;
+var cmdBrake = keyCtrl;
+var cmdCoast = keyEnd;
+
+var cmdTurretUp = keyW;
+var cmdTurretDown = keyS;
+var cmdTurretRight = keyD;
+var cmdTurretLeft = keyA;
+var cmdTurretCoast = keyF;
+
+var cmdFire = keySpace;
+
+$(document).keydown(function(e){
+
+	if( e.keyCode == prevKey ){
+		return 0;
+	}
+
+	prevKey = e.keyCode;
+
+	if( e.keyCode == cmdForward ){
+		//$.get("../include/processCmd.php",{cmd:"moveRobot",data:"forward"},function(data,status){
+		    //alert("Return: " + data + "\nAJAX Status: " + status);
+		//  });
+		socket_send("moveRobot:"+cmdForward);
+		
+	}else if( e.keyCode == cmdBackward ){
+		socket_send("moveRobot:"+cmdBackward);
+
+	}else if(e.keyCode == cmdLeft ){	
+		socket_send("moveRobot:"+cmdLeft);
+
+	}else if( e.keyCode == cmdRight ){
+		socket_send("moveRobot:"+cmdRight);
+
+	}else if( e.keyCode == cmdBrake ){
+		socket_send("moveRobot:"+cmdBrake);
+
+	}else if( e.keyCode == cmdTurretUp ){
+		socket_send("moveTurret:"+cmdTurretUp);
+
+	}else if( e.keyCode == cmdTurretDown ){
+		socket_send("moveTurret:"+cmdTurretDown);
+
+	}else if( e.keyCode == cmdTurretRight ){
+		socket_send("moveTurret:"+cmdTurretRight);
+
+	}else if( e.keyCode == cmdTurretLeft ){
+		socket_send("moveTurret:"+cmdTurretLeft);		
+
+	}else if( e.keyCode == cmdTurretCoast ){
+		socket_send("moveTurret:"+cmdTurretCoast);
+
+	}else if( e.keyCode == cmdFire ){
+		socket_send("moveTurret:"+cmdFire);
+		//sndLaser.play();
+		//alert("Fire!");			
+	}else{
+		alert(e.keyCode);
+	}
+	
+	
+});
+
+
+$(document).keyup(function(e){
+
+	//if( e.keyCode == prevKey ){
+	//	return 0;
+	//}
+
+	prevKey = 0;
+
+	if( e.keyCode == cmdForward ){	
+		socket_send("moveRobot:"+cmdCoast);
+
+	}else if( e.keyCode == cmdBackward ){
+		socket_send("moveRobot:"+cmdCoast);
+
+	}else if(e.keyCode == cmdLeft ){	
+		socket_send("moveRobot:"+cmdCoast);
+
+	}else if( e.keyCode == cmdRight ){
+		socket_send("moveRobot:"+cmdCoast);
+
+	}else if( e.keyCode == cmdBrake ){
+		socket_send("moveRobot:"+cmdCoast);
+	
+	}else if( e.keyCode == cmdTurretUp ){
+		socket_send("moveTurret:"+cmdTurretCoast);		
+
+	}else if( e.keyCode == cmdTurretDown ){
+		socket_send("moveTurret:"+cmdTurretCoast);
+
+	}else if( e.keyCode == cmdTurretLeft ){
+		socket_send("moveTurret:"+cmdTurretCoast);
+
+	}else if( e.keyCode == cmdTurretRight ){
+		socket_send("moveTurret:"+cmdTurretCoast);
+
+	}else if( e.keyCode == cmdFire ){
+		
+	}else{
+		alert(e.keyCode);
+	}
+	
+	
+});
+
+/*
+$('#cameraSrc').mousedown(function(e) {
+	var x = e.pageX;
+	var y = e.pageY;
+	
+	sndLaser.play();
+	
+  alert('Fire The LASER (' + x + ', ' + y + ')!!!');
+});
+*/
+
+/*$(function(){*/
+    
+/*
+    $('#cameraSrc').on('mousemove',function(e){
+		var cH = $('#crosshair-h'),
+        cV = $('#crosshair-v');
+		
+        cH.css('top',e.pageY-$(window).scrollTop());
+		cH.css('left',e.pageX);
+		
+        cV.css('left',e.pageX+50);
+		cV.css('top',e.pageY-50-$(window).scrollTop());
+		return false;
+    });
+*/
+
+/* });*/
+
+$("img").mousedown(function(){
+    return false;
+});
+
+</script>
+ 
+ 
+ 
+</body>
+</html>
